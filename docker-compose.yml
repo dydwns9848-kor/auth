@@ -23,7 +23,7 @@ services:
     # 환경 변수 설정
     environment:
       # DB 연결 (mysql-8 컨테이너 이름 사용)
-      DB_URL: jdbc:mysql://mysql-8:3306/mannal?useSSL=false&serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true
+      DB_URL: jdbc:mysql://mysql-8:3306/dydwns9848?useSSL=false&serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true
       DB_USERNAME: root
       DB_PASSWORD: 1234
 
@@ -33,9 +33,9 @@ services:
       JWT_REFRESH_TOKEN_EXPIRATION: 604800000
 
       # OAuth 카카오 설정
-      KAKAO_CLIENT_ID: f0bfa98dfa477735feeb8dbfdfa1d105
-      KAKAO_CLIENT_SECRET: U4JgTAZGirCvVGmmnvuSlsoWlKFPstvV
-      KAKAO_REDIRECT_URI: http://localhost:9080/auth/kakao/callback
+      KAKAO_CLIENT_ID: 340a6da82df32583123fe2c82bd4825c
+      KAKAO_CLIENT_SECRET: i3ZmIbnXQgm8peUGs7u4gIfGwOP4yAfI
+      KAKAO_REDIRECT_URI: http://localhost:8070/api/oauth/kakao/callback
 
       # Spring 프로파일
       SPRING_PROFILES_ACTIVE: dev
