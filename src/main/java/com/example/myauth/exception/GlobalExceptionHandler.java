@@ -10,6 +10,7 @@ import org.springframework.transaction.UnexpectedRollbackException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -117,6 +118,21 @@ public class GlobalExceptionHandler {
     return ResponseEntity
         .status(status)
         .body(ApiResponse.error(ex.getMessage()));
+  }
+
+  /**
+   * 멀티파트 업로드 크기 초과 예외 처리
+   * spring.servlet.multipart.max-file-size 제한을 넘겼을 때 발생
+   */
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceededException(
+      MaxUploadSizeExceededException ex) {
+    log.warn("업로드 파일 크기 초과: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.error("파일 크기가 너무 큽니다. 최대 10MB 이하 파일만 업로드 가능합니다."));
   }
 
   /**
