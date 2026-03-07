@@ -222,10 +222,8 @@ public class PostService {
       throw new UnauthorizedAccessException("이 게시글을 볼 수 있는 권한이 없습니다.");
     }
 
-    // 3. 조회수 증가 (작성자 본인이 아닌 경우에만)
-    if (!post.getUser().getId().equals(userId)) {
-      postRepository.incrementViewCount(postId);
-    }
+    // 3. 조회수 증가 (DB 레벨에서 작성자 본인 조회 제외)
+    postRepository.incrementViewCountIfNotAuthor(postId, userId);
 
     // 4. 좋아요/북마크 여부 확인 (TODO: Phase 2-3에서 구현)
     boolean isLiked = false;

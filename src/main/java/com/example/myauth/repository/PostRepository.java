@@ -90,6 +90,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
   void incrementViewCount(@Param("postId") Long postId);
 
   /**
+   * 조회수 증가 (작성자 본인 조회는 제외)
+   * @param postId 게시글 ID
+   * @param viewerId 조회한 사용자 ID
+   */
+  @Modifying
+  @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 " +
+      "WHERE p.id = :postId AND p.user.id <> :viewerId")
+  void incrementViewCountIfNotAuthor(@Param("postId") Long postId, @Param("viewerId") Long viewerId);
+
+  /**
    * 좋아요 수 증가
    * @param postId 게시글 ID
    */
