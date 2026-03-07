@@ -107,7 +107,7 @@ public class AuthController {
       // Refresh Token을 HTTP-only 쿠키로 설정
       // ResponseCookie를 사용하여 SameSite와 Domain 속성 명시
       // - SameSite=Lax: CSRF 방어 + 일반적인 웹 사용 가능
-      // - Domain=localhost: 포트 무관하게 모든 localhost에서 쿠키 공유 (localhost:5173과 localhost:9080 모두 접근 가능)
+      // - Domain 미지정(host-only): 현재 요청 호스트 기준으로 쿠키 저장
       ResponseCookie refreshTokenCookie = ResponseCookie
           .from("refreshToken", loginResponse.getRefreshToken())
           .httpOnly(true)   // JavaScript 접근 불가 (XSS 방어)
@@ -115,10 +115,9 @@ public class AuthController {
           .path("/")        // 모든 경로에서 쿠키 전송
           .maxAge(7 * 24 * 60 * 60)  // 7일 (초 단위)
           .sameSite("Lax")  // CSRF 방어 + 일반 네비게이션에서 쿠키 전송 허용
-          .domain("localhost")  // 포트 무관하게 localhost 전체에서 쿠키 공유
           .build();
 
-      log.info("쿠키 설정: HttpOnly=true, Secure={}, Path=/, MaxAge=7일, SameSite=Lax, Domain=localhost",
+      log.info("쿠키 설정: HttpOnly=true, Secure={}, Path=/, MaxAge=7일, SameSite=Lax, Domain=host-only",
           appProperties.getCookie().isSecure());
 
       response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
