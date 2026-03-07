@@ -6,7 +6,6 @@ import com.example.myauth.entity.Like;
 import com.example.myauth.entity.Post;
 import com.example.myauth.entity.User;
 import com.example.myauth.exception.CommentNotFoundException;
-import com.example.myauth.exception.DuplicateLikeException;
 import com.example.myauth.exception.LikeNotFoundException;
 import com.example.myauth.exception.PostNotFoundException;
 import com.example.myauth.repository.CommentRepository;
@@ -42,6 +41,23 @@ public class LikeService {
   // ===== 게시글 좋아요 =====
 
   /**
+   * 게시글 좋아요 토글
+   * - 기존에 좋아요가 있으면 취소
+   * - 없으면 좋아요 추가
+   *
+   * @param userId 사용자 ID
+   * @param postId 게시글 ID
+   * @return 좋아요 응답
+   */
+  @Transactional
+  public LikeResponse togglePostLike(Long userId, Long postId) {
+    if (likeRepository.existsPostLikeByUserId(userId, postId)) {
+      return unlikePost(userId, postId);
+    }
+    return likePost(userId, postId);
+  }
+
+  /**
    * 게시글 좋아요
    *
    * @param userId 사용자 ID
@@ -56,9 +72,9 @@ public class LikeService {
     Post post = postRepository.findByIdAndIsDeletedFalse(postId)
         .orElseThrow(() -> new PostNotFoundException(postId));
 
-    // 2. 중복 좋아요 확인
+    // 2. 중복 좋아요 확인 (POST 토글 API와 별개로 직접 호출 시 안전장치)
     if (likeRepository.existsPostLikeByUserId(userId, postId)) {
-      throw new DuplicateLikeException("이미 좋아요한 게시글입니다.");
+      return unlikePost(userId, postId);
     }
 
     // 3. 사용자 조회
@@ -115,6 +131,23 @@ public class LikeService {
   // ===== 댓글 좋아요 =====
 
   /**
+   * 댓글 좋아요 토글
+   * - 기존에 좋아요가 있으면 취소
+   * - 없으면 좋아요 추가
+   *
+   * @param userId 사용자 ID
+   * @param commentId 댓글 ID
+   * @return 좋아요 응답
+   */
+  @Transactional
+  public LikeResponse toggleCommentLike(Long userId, Long commentId) {
+    if (likeRepository.existsCommentLikeByUserId(userId, commentId)) {
+      return unlikeComment(userId, commentId);
+    }
+    return likeComment(userId, commentId);
+  }
+
+  /**
    * 댓글 좋아요
    *
    * @param userId 사용자 ID
@@ -129,9 +162,9 @@ public class LikeService {
     var comment = commentRepository.findByIdAndIsDeletedFalse(commentId)
         .orElseThrow(() -> new CommentNotFoundException(commentId));
 
-    // 2. 중복 좋아요 확인
+    // 2. 중복 좋아요 확인 (POST 토글 API와 별개로 직접 호출 시 안전장치)
     if (likeRepository.existsCommentLikeByUserId(userId, commentId)) {
-      throw new DuplicateLikeException("이미 좋아요한 댓글입니다.");
+      return unlikeComment(userId, commentId);
     }
 
     // 3. 사용자 조회

@@ -57,11 +57,12 @@ public class LikeController {
       @AuthenticationPrincipal User user,
       @PathVariable Long postId
   ) {
-    log.info("게시글 좋아요 요청 - userId: {}, postId: {}", user.getId(), postId);
+    log.info("게시글 좋아요 토글 요청 - userId: {}, postId: {}", user.getId(), postId);
 
-    LikeResponse response = likeService.likePost(user.getId(), postId);
+    LikeResponse response = likeService.togglePostLike(user.getId(), postId);
+    String message = response.getLiked() ? "좋아요 완료" : "좋아요 취소 완료";
 
-    return ResponseEntity.ok(ApiResponse.success("좋아요 완료", response));
+    return ResponseEntity.ok(ApiResponse.success(message, response));
   }
 
   /**
@@ -119,11 +120,12 @@ public class LikeController {
       @AuthenticationPrincipal User user,
       @PathVariable Long commentId
   ) {
-    log.info("댓글 좋아요 요청 - userId: {}, commentId: {}", user.getId(), commentId);
+    log.info("댓글 좋아요 토글 요청 - userId: {}, commentId: {}", user.getId(), commentId);
 
-    LikeResponse response = likeService.likeComment(user.getId(), commentId);
+    LikeResponse response = likeService.toggleCommentLike(user.getId(), commentId);
+    String message = response.getLiked() ? "좋아요 완료" : "좋아요 취소 완료";
 
-    return ResponseEntity.ok(ApiResponse.success("좋아요 완료", response));
+    return ResponseEntity.ok(ApiResponse.success(message, response));
   }
 
   /**
