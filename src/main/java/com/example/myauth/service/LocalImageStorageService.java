@@ -182,7 +182,8 @@ public class LocalImageStorageService implements ImageStorageService {
     String normalizedContentType = contentType != null ? contentType.toLowerCase() : "";
     String extension = getFileExtension(originalFileName).toLowerCase();
 
-    boolean validByContentType = ALLOWED_IMAGE_TYPES.contains(normalizedContentType);
+    boolean validByContentType = ALLOWED_IMAGE_TYPES.contains(normalizedContentType)
+        || normalizedContentType.startsWith("image/");
     boolean validByExtension = ALLOWED_IMAGE_EXTENSIONS.contains(extension);
 
     if (!validByContentType && !validByExtension) {

@@ -2,6 +2,7 @@ package com.example.myauth.controller;
 
 import com.example.myauth.dto.ApiResponse;
 import com.example.myauth.dto.post.*;
+import com.example.myauth.entity.Visibility;
 import com.example.myauth.entity.User;
 import com.example.myauth.service.PostService;
 import jakarta.validation.ConstraintViolation;
@@ -89,11 +90,14 @@ public class PostController {
   @PostMapping(value = "/with-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ApiResponse<PostResponse>> createPostWithImages(
       @AuthenticationPrincipal User user,
-      @RequestPart("post") String postJson,
+      @RequestPart(value = "post", required = false) String postJson,
+      @RequestPart(value = "content", required = false) String content,
+      @RequestPart(value = "visibility", required = false) String visibility,
       @RequestPart(value = "images", required = false) List<MultipartFile> images,
-      @RequestPart(value = "image", required = false) MultipartFile image
+      @RequestPart(value = "image", required = false) MultipartFile image,
+      @RequestPart(value = "files", required = false) List<MultipartFile> files
   ) {
-    PostCreateRequest request = parseAndValidatePostRequest(postJson);
+    PostCreateRequest request = parseAndValidatePostRequest(postJson, content, visibility);
 
     List<MultipartFile> mergedImages = new ArrayList<>();
     if (images != null) {
@@ -105,6 +109,13 @@ public class PostController {
     }
     if (image != null && !image.isEmpty()) {
       mergedImages.add(image);
+    }
+    if (files != null) {
+      for (MultipartFile file : files) {
+        if (file != null && !file.isEmpty()) {
+          mergedImages.add(file);
+        }
+      }
     }
 
     log.info("게시글 작성 요청 (이미지 포함) - userId: {}, 이미지 개수: {}",
@@ -118,9 +129,23 @@ public class PostController {
         .body(ApiResponse.success("게시글이 작성되었습니다.", response));
   }
 
-  private PostCreateRequest parseAndValidatePostRequest(String postJson) {
+  private PostCreateRequest parseAndValidatePostRequest(
+      String postJson,
+      String content,
+      String visibility
+  ) {
     try {
-      PostCreateRequest request = objectMapper.readValue(postJson, PostCreateRequest.class);
+      PostCreateRequest request;
+
+      if (postJson != null && !postJson.isBlank()) {
+        request = objectMapper.readValue(postJson, PostCreateRequest.class);
+      } else {
+        request = PostCreateRequest.builder()
+            .content(content)
+            .visibility(parseVisibility(visibility))
+            .build();
+      }
+
       Set<ConstraintViolation<PostCreateRequest>> violations = validator.validate(request);
       if (!violations.isEmpty()) {
         String message = violations.iterator().next().getMessage();
@@ -130,7 +155,18 @@ public class PostController {
     } catch (IllegalArgumentException e) {
       throw e;
     } catch (Exception e) {
-      throw new IllegalArgumentException("post 파트는 유효한 JSON 형식이어야 합니다.");
+      throw new IllegalArgumentException("게시글 데이터 형식이 올바르지 않습니다. post(JSON) 또는 content 필드를 확인해주세요.");
+    }
+  }
+
+  private Visibility parseVisibility(String visibility) {
+    if (visibility == null || visibility.isBlank()) {
+      return Visibility.PUBLIC;
+    }
+    try {
+      return Visibility.valueOf(visibility.trim().toUpperCase());
+    } catch (Exception e) {
+      throw new IllegalArgumentException("visibility 값이 올바르지 않습니다. (PUBLIC, PRIVATE, FOLLOWERS)");
     }
   }
 
