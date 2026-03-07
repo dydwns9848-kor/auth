@@ -129,6 +129,25 @@ public class PostController {
         .body(ApiResponse.success("게시글이 작성되었습니다.", response));
   }
 
+  /**
+   * 게시글 작성 (이미지 포함, 모바일 호환 경로)
+   *
+   * POST /api/posts
+   * Content-Type: multipart/form-data
+   */
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiResponse<PostResponse>> createPostWithImagesCompat(
+      @AuthenticationPrincipal User user,
+      @RequestPart(value = "post", required = false) String postJson,
+      @RequestPart(value = "content", required = false) String content,
+      @RequestPart(value = "visibility", required = false) String visibility,
+      @RequestPart(value = "images", required = false) List<MultipartFile> images,
+      @RequestPart(value = "image", required = false) MultipartFile image,
+      @RequestPart(value = "files", required = false) List<MultipartFile> files
+  ) {
+    return createPostWithImages(user, postJson, content, visibility, images, image, files);
+  }
+
   private PostCreateRequest parseAndValidatePostRequest(
       String postJson,
       String content,
