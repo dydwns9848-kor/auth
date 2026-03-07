@@ -197,7 +197,20 @@ public class KakaoAuthController {
 
       // 5️⃣ 웹 클라이언트면 토큰을 URL fragment로 전달하고 프론트엔드로 리다이렉트
       if (isWebClient) {
-        log.info("웹 클라이언트 감지 → 토큰을 URL fragment로 전달하고 프론트엔드로 리다이렉트");
+        log.info("웹 클라이언트 감지 → Refresh Token 쿠키 설정 후 Access Token을 URL fragment로 전달");
+
+        // Refresh Token을 HTTP-only 쿠키로 설정
+        ResponseCookie refreshTokenCookie = ResponseCookie
+            .from("refreshToken", loginResponse.getRefreshToken())
+            .httpOnly(true)   // JavaScript 접근 불가 (XSS 방어)
+            .secure(appProperties.getCookie().isSecure())  // 환경별 동적 설정 (개발: false, 프로덕션: true)
+            .path("/")        // 모든 경로에서 쿠키 전송
+            .maxAge(7 * 24 * 60 * 60)  // 7일 (초 단위)
+            .sameSite("Lax")  // CSRF 방어 + 일반 네비게이션에서 쿠키 전송 허용
+            .domain("localhost")  // 포트 무관하게 localhost 전체에서 쿠키 공유
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        log.info("Refresh Token 쿠키 설정 완료 (웹 클라이언트)");
 
         // 🔒 Cross-Port 세션 쿠키 문제 해결:
         // 세션 쿠키는 포트가 다르면 공유되지 않으므로, 토큰을 URL fragment(#)로 전달

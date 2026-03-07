@@ -72,7 +72,7 @@ networks:
   # 기존 mysql-8 컨테이너도 이 네트워크에 연결되어야 함
   myauth-network:
     driver: bridge
-    name: myauth-network
+    name: auth-network
 
 # ========================================
 # 볼륨 정의
@@ -82,7 +82,7 @@ volumes:
   # 컨테이너를 삭제해도 데이터가 유지됨
   upload-data:
     driver: local
-    name: myauth-upload-data
+    name: auth-upload-data
 
 # ================================================
 # 사용 방법
