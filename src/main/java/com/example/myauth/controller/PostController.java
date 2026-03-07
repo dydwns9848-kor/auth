@@ -4,7 +4,9 @@ import com.example.myauth.dto.ApiResponse;
 import com.example.myauth.dto.post.*;
 import com.example.myauth.entity.User;
 import com.example.myauth.service.PostService;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,8 +19,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 게시글 컨트롤러
@@ -40,6 +45,8 @@ import java.util.List;
 public class PostController {
 
   private final PostService postService;
+  private final ObjectMapper objectMapper;
+  private final Validator validator;
 
   // ===== 게시글 작성 =====
 
@@ -82,17 +89,49 @@ public class PostController {
   @PostMapping(value = "/with-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ApiResponse<PostResponse>> createPostWithImages(
       @AuthenticationPrincipal User user,
-      @Valid @RequestPart("post") PostCreateRequest request,
-      @RequestPart(value = "images", required = false) List<MultipartFile> images
+      @RequestPart("post") String postJson,
+      @RequestPart(value = "images", required = false) List<MultipartFile> images,
+      @RequestPart(value = "image", required = false) MultipartFile image
   ) {
-    log.info("게시글 작성 요청 (이미지 포함) - userId: {}, 이미지 개수: {}",
-        user.getId(), images != null ? images.size() : 0);
+    PostCreateRequest request = parseAndValidatePostRequest(postJson);
 
-    PostResponse response = postService.createPost(user.getId(), request, images);
+    List<MultipartFile> mergedImages = new ArrayList<>();
+    if (images != null) {
+      for (MultipartFile file : images) {
+        if (file != null && !file.isEmpty()) {
+          mergedImages.add(file);
+        }
+      }
+    }
+    if (image != null && !image.isEmpty()) {
+      mergedImages.add(image);
+    }
+
+    log.info("게시글 작성 요청 (이미지 포함) - userId: {}, 이미지 개수: {}",
+        user.getId(), mergedImages.size());
+
+    PostResponse response = postService.createPost(user.getId(), request,
+        mergedImages.isEmpty() ? null : mergedImages);
 
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(ApiResponse.success("게시글이 작성되었습니다.", response));
+  }
+
+  private PostCreateRequest parseAndValidatePostRequest(String postJson) {
+    try {
+      PostCreateRequest request = objectMapper.readValue(postJson, PostCreateRequest.class);
+      Set<ConstraintViolation<PostCreateRequest>> violations = validator.validate(request);
+      if (!violations.isEmpty()) {
+        String message = violations.iterator().next().getMessage();
+        throw new IllegalArgumentException(message);
+      }
+      return request;
+    } catch (IllegalArgumentException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IllegalArgumentException("post 파트는 유효한 JSON 형식이어야 합니다.");
+    }
   }
 
   // ===== 게시글 수정 =====

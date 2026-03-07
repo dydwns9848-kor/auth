@@ -34,7 +34,20 @@ public class LocalImageStorageService implements ImageStorageService {
       "image/jpg",
       "image/png",
       "image/gif",
-      "image/webp"
+      "image/webp",
+      "image/heic",
+      "image/heif"
+  );
+
+  /** 허용되는 이미지 확장자 목록 (일부 모바일 환경 contentType 누락/오인식 대응) */
+  private static final List<String> ALLOWED_IMAGE_EXTENSIONS = Arrays.asList(
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
+      ".heic",
+      ".heif"
   );
 
   /** 최대 파일 크기 (10MB) */
@@ -158,17 +171,23 @@ public class LocalImageStorageService implements ImageStorageService {
           "파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.");
     }
 
-    // 파일 타입 검증
-    String contentType = file.getContentType();
-    if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
-      throw new InvalidFileException(ErrorCode.UNSUPPORTED_TYPE,
-          "지원하지 않는 파일 형식입니다. (지원: JPEG, PNG, GIF, WEBP)");
-    }
-
     // 파일명 검증 (경로 조작 방지)
     String originalFileName = file.getOriginalFilename();
     if (originalFileName == null || originalFileName.contains("..")) {
       throw new InvalidFileException(ErrorCode.INVALID_FILENAME, "잘못된 파일명입니다.");
+    }
+
+    // 파일 타입 검증 (MIME 타입 또는 확장자 중 하나라도 허용 시 통과)
+    String contentType = file.getContentType();
+    String normalizedContentType = contentType != null ? contentType.toLowerCase() : "";
+    String extension = getFileExtension(originalFileName).toLowerCase();
+
+    boolean validByContentType = ALLOWED_IMAGE_TYPES.contains(normalizedContentType);
+    boolean validByExtension = ALLOWED_IMAGE_EXTENSIONS.contains(extension);
+
+    if (!validByContentType && !validByExtension) {
+      throw new InvalidFileException(ErrorCode.UNSUPPORTED_TYPE,
+          "지원하지 않는 파일 형식입니다. (지원: JPEG, PNG, GIF, WEBP, HEIC, HEIF)");
     }
   }
 

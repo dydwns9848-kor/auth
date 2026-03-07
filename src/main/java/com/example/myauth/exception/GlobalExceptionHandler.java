@@ -11,6 +11,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -133,6 +134,26 @@ public class GlobalExceptionHandler {
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)
         .body(ApiResponse.error("파일 크기가 너무 큽니다. 최대 10MB 이하 파일만 업로드 가능합니다."));
+  }
+
+  /**
+   * 멀티파트 필수 파트 누락 예외 처리
+   */
+  @ExceptionHandler(MissingServletRequestPartException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestPartException(
+      MissingServletRequestPartException ex) {
+    log.warn("멀티파트 요청 파트 누락: {}", ex.getRequestPartName());
+
+    String message = switch (ex.getRequestPartName()) {
+      case "post" -> "post 파트가 누락되었습니다. JSON 문자열을 post 필드로 전송해주세요.";
+      case "images", "image" -> "이미지 파트 형식이 올바르지 않습니다. images 또는 image 필드로 파일을 전송해주세요.";
+      default -> "multipart/form-data 요청 파트가 누락되었습니다: " + ex.getRequestPartName();
+    };
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.error(message));
   }
 
   /**
