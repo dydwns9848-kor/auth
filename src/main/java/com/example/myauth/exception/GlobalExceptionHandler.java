@@ -303,6 +303,39 @@ public class GlobalExceptionHandler {
         .body(ApiResponse.error(ex.getMessage()));
   }
 
+  @ExceptionHandler(DmRoomNotFoundException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleDmRoomNotFoundException(
+      DmRoomNotFoundException ex) {
+    log.warn("DM 대화방 조회 실패: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body(ApiResponse.error(ex.getMessage()));
+  }
+
+  @ExceptionHandler(DmAccessDeniedException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleDmAccessDeniedException(
+      DmAccessDeniedException ex) {
+    log.warn("DM 접근 권한 없음: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(ApiResponse.error(ex.getMessage()));
+  }
+
+  @ExceptionHandler(DmPolicyViolationException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleDmPolicyViolationException(
+      DmPolicyViolationException ex) {
+    log.warn("DM 정책 위반: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(ApiResponse.error(ex.getMessage()));
+  }
+
   /**
    * 중복 북마크 예외 처리
    */
