@@ -16,8 +16,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 카카오 OAuth 로그인 컨트롤러
@@ -31,6 +34,7 @@ public class KakaoAuthController {
 
   private final KakaoOAuthService kakaoOAuthService;
   private final AppProperties appProperties;
+  private final ObjectMapper objectMapper;
 
   /**
    * 토큰 교환 엔드포인트 (Cross-Port 쿠키 문제 해결용)
@@ -216,15 +220,14 @@ public class KakaoAuthController {
         // 프론트엔드 JavaScript에서만 접근 가능
 
         // 사용자 정보를 URL-safe하게 인코딩
-        String userJson = String.format(
-            "{\"id\":%d,\"email\":\"%s\",\"name\":\"%s\",\"profileImage\":%s}",
-            loginResponse.getUser().getId(),
-            loginResponse.getUser().getEmail(),
-            loginResponse.getUser().getName(),
-            loginResponse.getUser().getProfileImage() != null
-                ? "\"" + loginResponse.getUser().getProfileImage() + "\""
-                : "null"
-        );
+        Map<String, Object> userPayload = new LinkedHashMap<>();
+        userPayload.put("id", loginResponse.getUser().getId());
+        userPayload.put("email", loginResponse.getUser().getEmail());
+        userPayload.put("name", loginResponse.getUser().getName());
+        userPayload.put("role", loginResponse.getUser().getRole());
+        userPayload.put("isSuperUser", loginResponse.getUser().getIsSuperUser());
+        userPayload.put("profileImage", loginResponse.getUser().getProfileImage());
+        String userJson = objectMapper.writeValueAsString(userPayload);
         String encodedUser = java.net.URLEncoder.encode(userJson, "UTF-8");
 
         // URL fragment로 토큰과 사용자 정보 전달
@@ -244,14 +247,8 @@ public class KakaoAuthController {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // JSON 응답 작성
-        String jsonResponse = String.format(
-            "{\"success\":true,\"message\":\"카카오 로그인 성공\",\"data\":{\"accessToken\":\"%s\",\"refreshToken\":\"%s\",\"user\":{\"id\":%d,\"email\":\"%s\",\"name\":\"%s\"}}}",
-            loginResponse.getAccessToken(),
-            loginResponse.getRefreshToken(),
-            loginResponse.getUser().getId(),
-            loginResponse.getUser().getEmail(),
-            loginResponse.getUser().getName()
+        String jsonResponse = objectMapper.writeValueAsString(
+            ApiResponse.success("카카오 로그인 성공", loginResponse)
         );
         response.getWriter().write(jsonResponse);
       }

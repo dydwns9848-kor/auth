@@ -128,7 +128,12 @@ public class AuthService {
     }
 
     // 5️⃣ JWT 토큰 생성
-    String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail(), user.getId());
+    String accessToken = jwtTokenProvider.generateAccessToken(
+        user.getEmail(),
+        user.getId(),
+        user.getRole().name(),
+        user.getIsSuperUser()
+    );
     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
 
     log.info("JWT 토큰 생성 완료: {}", normalizedEmail);
@@ -152,6 +157,7 @@ public class AuthService {
         .email(user.getEmail())
         .name(user.getName())
         .role(user.getRole().name())
+        .isSuperUser(user.getIsSuperUser())
         .profileImage(user.getProfileImage())
         .build();
 
@@ -196,7 +202,12 @@ public class AuthService {
     User user = customUserDetails.getUser();
 
     // 4️⃣ JWT 토큰 생성
-    String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail(), user.getId());
+    String accessToken = jwtTokenProvider.generateAccessToken(
+        user.getEmail(),
+        user.getId(),
+        user.getRole().name(),
+        user.getIsSuperUser()
+    );
     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
     log.info("JWT 토큰 생성 완료 (loginEx): {}", normalizedEmail);
 
@@ -219,6 +230,8 @@ public class AuthService {
         .email(user.getEmail())
         .name(user.getName())
         .role(user.getRole().name())
+        .isSuperUser(user.getIsSuperUser())
+        .profileImage(user.getProfileImage())
         .build();
 
     log.info("로그인 성공 (loginEx): {}", normalizedEmail);
@@ -269,12 +282,27 @@ public class AuthService {
     }
 
     // 6️⃣ 새 Access Token 생성
-    String newAccessToken = jwtTokenProvider.generateAccessToken(user.getEmail(), user.getId());
+    String newAccessToken = jwtTokenProvider.generateAccessToken(
+        user.getEmail(),
+        user.getId(),
+        user.getRole().name(),
+        user.getIsSuperUser()
+    );
     log.info("새 Access Token 발급 성공: {}", email);
+
+    LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.builder()
+        .id(user.getId())
+        .email(user.getEmail())
+        .name(user.getName())
+        .role(user.getRole().name())
+        .isSuperUser(user.getIsSuperUser())
+        .profileImage(user.getProfileImage())
+        .build();
 
     return TokenRefreshResponse.builder()
         .accessToken(newAccessToken)
         .refreshToken(null)  // Refresh Token Rotation 미사용
+        .user(userInfo)
         .build();
   }
 }

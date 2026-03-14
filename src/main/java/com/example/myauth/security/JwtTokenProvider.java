@@ -42,9 +42,11 @@ public class JwtTokenProvider {
    * Access Token 생성
    * @param userEmail 사용자 이메일
    * @param userId 사용자 ID
+   * @param role 사용자 권한
+   * @param isSuperUser 슈퍼관리자 여부
    * @return Access Token 문자열
    */
-  public String generateAccessToken(String userEmail, Long userId) {
+  public String generateAccessToken(String userEmail, Long userId, String role, Boolean isSuperUser) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
@@ -53,6 +55,9 @@ public class JwtTokenProvider {
     return Jwts.builder()
         .subject(userEmail)                    // 토큰 주체 (사용자 이메일)
         .claim("userId", userId)            // 사용자 ID 추가
+        .claim("role", role)                // 권한 추가
+        .claim("authorities", java.util.List.of(role)) // 권한 배열 추가 (프론트 호환)
+        .claim("isSuperUser", isSuperUser)  // 슈퍼관리자 여부 추가
         .claim("type", "access")         // 토큰 타입
         .issuedAt(now)                         // 발행 시간
         .expiration(expiryDate)                // 만료 시간

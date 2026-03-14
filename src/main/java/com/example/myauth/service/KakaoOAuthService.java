@@ -209,7 +209,12 @@ public class KakaoOAuthService {
     }
 
     // 2️⃣ JWT 토큰 생성
-    String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail(), user.getId());
+    String accessToken = jwtTokenProvider.generateAccessToken(
+        user.getEmail(),
+        user.getId(),
+        user.getRole().name(),
+        user.getIsSuperUser()
+    );
     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
     log.info("JWT 토큰 생성 완료 - User ID: {}", user.getId());
 
@@ -232,6 +237,7 @@ public class KakaoOAuthService {
         .email(user.getEmail())
         .name(user.getName())
         .role(user.getRole().name())
+        .isSuperUser(user.getIsSuperUser())
         .profileImage(user.getProfileImage())
         .build();
 
