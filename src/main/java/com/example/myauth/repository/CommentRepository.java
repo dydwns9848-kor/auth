@@ -3,9 +3,12 @@ package com.example.myauth.repository;
 import com.example.myauth.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +26,7 @@ import java.util.Optional;
  * - 게시글의 댓글 수 카운팅
  */
 @Repository
-public interface CommentRepository extends JpaRepository<Comment, Long> {
+public interface CommentRepository extends JpaRepository<Comment, Long>, JpaSpecificationExecutor<Comment> {
 
   // ===== 기본 조회 =====
 
@@ -46,6 +49,16 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
       "JOIN FETCH c.post " +
       "WHERE c.id = :id AND c.isDeleted = false")
   Optional<Comment> findByIdWithUserAndPost(@Param("id") Long id);
+
+  @Query("SELECT c FROM Comment c " +
+      "JOIN FETCH c.user " +
+      "JOIN FETCH c.post " +
+      "WHERE c.id = :id")
+  Optional<Comment> findByIdWithUserAndPostForAdmin(@Param("id") Long id);
+
+  @Override
+  @EntityGraph(attributePaths = {"user", "post"})
+  Page<Comment> findAll(Specification<Comment> spec, Pageable pageable);
 
   // ===== 게시글별 댓글 조회 =====
 

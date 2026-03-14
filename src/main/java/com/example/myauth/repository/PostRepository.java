@@ -5,6 +5,7 @@ import com.example.myauth.entity.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +18,7 @@ import java.util.Optional;
  * 게시글 조회, 저장, 수정, 삭제를 위한 데이터 접근 계층
  */
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
   // ===== 단건 조회 =====
 
@@ -46,6 +47,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
          "LEFT JOIN FETCH p.images " +
          "WHERE p.id = :id AND p.isDeleted = false")
   Optional<Post> findByIdWithUserAndImages(@Param("id") Long id);
+
+  @Query("SELECT DISTINCT p FROM Post p " +
+         "JOIN FETCH p.user " +
+         "LEFT JOIN FETCH p.images " +
+         "WHERE p.id = :id")
+  Optional<Post> findByIdWithUserAndImagesForAdmin(@Param("id") Long id);
 
   // ===== 목록 조회 =====
 
@@ -147,6 +154,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
    * @return 소유 여부
    */
   boolean existsByIdAndUserIdAndIsDeletedFalse(Long id, Long userId);
+
+  long countByIsDeletedFalse();
 
   // ===== 피드 조회 =====
 

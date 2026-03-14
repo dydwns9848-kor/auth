@@ -186,6 +186,28 @@ public class GlobalExceptionHandler {
         .body(ApiResponse.error(ex.getMessage()));
   }
 
+  @ExceptionHandler(AdminAccessDeniedException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleAdminAccessDeniedException(
+      AdminAccessDeniedException ex) {
+    log.warn("관리자 권한 부족: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(ApiResponse.error(ex.getMessage()));
+  }
+
+  @ExceptionHandler(ModerationPolicyException.class)
+  @SuppressWarnings("NullableProblems")
+  public ResponseEntity<ApiResponse<Void>> handleModerationPolicyException(
+      ModerationPolicyException ex) {
+    log.warn("운영 정책 위반 요청: {}", ex.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.error(ex.getMessage()));
+  }
+
   /**
    * 댓글을 찾을 수 없을 때 예외 처리
    * 존재하지 않는 댓글 ID로 조회/수정/삭제 시도 시 발생

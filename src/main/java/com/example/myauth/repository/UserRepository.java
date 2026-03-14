@@ -2,6 +2,7 @@ package com.example.myauth.repository;
 
 import com.example.myauth.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -11,7 +12,7 @@ import java.util.Optional;
  * Spring Data JPA가 자동으로 구현을 생성한다
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
   /**
    * 이메일로 사용자를 조회한다
    * @param email 조회할 이메일
@@ -40,4 +41,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
    * @return 사용자 정보 (Optional)
    */
   Optional<User> findByName(String name);
+
+  long countByStatus(User.Status status);
+
+  long countByIsActiveTrue();
+
+  long countByRoleAndIsSuperUserTrue(User.Role role);
 }

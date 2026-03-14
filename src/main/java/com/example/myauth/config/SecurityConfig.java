@@ -90,6 +90,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/kakao/**", "/api/auth/kakao/**").permitAll()
                 // 업로드된 이미지 파일 접근 (인증 불필요 - 공개 리소스)
                 .requestMatchers("/uploads/**").permitAll()
+                // 관리자 API는 ROLE_ADMIN 이상만 접근 가능
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // 그 외 모든 요청은 인증 필요
                 .anyRequest().authenticated()
         )
